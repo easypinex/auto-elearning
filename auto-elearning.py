@@ -318,8 +318,8 @@ class autoElearning():
         loaded = False
         while not loaded:
             try:
-        driver.get(classBranch['url'])
-        logging.debug("wait by contentframe ...")
+                driver.get(classBranch['url'])
+                logging.debug("wait by contentframe ...")
                 WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.ID, "contentframe")))
                 loaded = True
             except:
