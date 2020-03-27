@@ -1,8 +1,5 @@
 # coding=utf-8
 # ----------------
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 from selenium import webdriver
 from time import sleep
 from lxml import etree
@@ -20,11 +17,11 @@ from datetime import datetime
 import re
 from threading import Thread
 
-# from PIL import Image#
-# import numpy as np#
-# import os#
-# from subprocess import check_output,STDOUT#
-# import codecs#
+from PIL import Image#
+import numpy as np#
+import os#
+from subprocess import check_output,STDOUT#
+import codecs#
 
 
 class autoElearning():
@@ -33,9 +30,8 @@ class autoElearning():
     logging = None
     
     
-    
     def run(self):
-        ocr = False
+        ocr = True
         debug = False
         BigExam = False
         BigExamUrl = 'https://elearning.hncb.com.tw/WcmsModules/Exam/ExamModule/ExamInfo.aspx?ExamPK=3642'
@@ -53,8 +49,10 @@ class autoElearning():
         
         self.loadLog()
         web = u'員工' if not ocr else u'易學網'
-        ac = raw_input(u"請輸入{}網站帳號:".format(web).encode('big5'))
-        pw = raw_input(u"請輸入{}網站密碼:".format(web).encode('big5'))
+        # ac = input(u"請輸入{}網站帳號:".format(web).encode('big5'))
+        # pw = input(u"請輸入{}網站密碼:".format(web).encode('big5'))
+        ac = 'hb15358'
+        pw = '!2Xjialjl'
         for i in range(30):
             print("")
             
@@ -71,11 +69,11 @@ class autoElearning():
         consoleLoader = DesiredCapabilities.CHROME
         consoleLoader['loggingPrefs'] = { 'browser':'ALL'}
         try:
-            chrome_options.binary_location = open('chromePath.txt').readlines()[0]
+            chromePath = os.path.abspath(open('chromePath.txt').readlines()[0])
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
         except:
-            raw_input(u'請至 https://sites.google.com/a/chromium.org/chromedriver/downloads 找尋符合的 ChromeDriver 並取代 (Enter)'.encode('big5'))
-            raw_input(u'請確認chromePath.txt路徑正確 (Enter)'.encode('big5'))
+            input(u'請至 https://sites.google.com/a/chromium.org/chromedriver/downloads 找尋符合的 ChromeDriver 並取代 (Enter)'.encode('big5'))
+            input(u'請確認chromePath.txt路徑正確 (Enter)'.encode('big5'))
             chrome_options.binary_location = open('chromePath.txt').readlines()[0]
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
               
@@ -111,13 +109,13 @@ class autoElearning():
         
         
         classInfo = self.getClassInfo(driver.page_source)
-        print ""
+        print("")
         for i,myclass in enumerate(classInfo):
-            print i,myclass['name'].encode('big5') 
-        print ""
+            print(i,myclass['name'].encode('big5'))
+        print("")
         logging.debug("classInfo = "+str(classInfo))
         autoElearning.logging = logging
-        userChoose = raw_input(u"請輸入需要上課課程 並以,分隔，全自動請輸入 all\n".encode('big5')).split(',')
+        userChoose = input(u"請輸入需要上課課程 並以,分隔，全自動請輸入 all\n".encode('big5')).split(',')
         debug = '-f' in userChoose
         
         if userChoose[0] in ['all','ALL','All']:
@@ -191,7 +189,7 @@ class autoElearning():
             else:
                 logging.info(u"跳過可結案課程或非選擇:{} ({}/{})".format(myclass['name'],i+1,len(classInfo)).encode('big5'))
         logging.info(u"完成所有指定課程! Enter 結束!".encode('big5'))
-        raw_input("")
+        input("")
     
     def getClassInfo(self,html):
         tree = etree.HTML(html)
@@ -649,12 +647,12 @@ class autoElearning():
 #                     if j+1 % 3 == 0:
 #                         ansListText+='\n'
 #                 print ansListText
-#                 raw_input(u'有答案無法填寫，請手動點擊答案！ 按下Eneter放大瀏覽器\n'.encode('big5'))
+#                 input(u'有答案無法填寫，請手動點擊答案！ 按下Eneter放大瀏覽器\n'.encode('big5'))
 #                 try:
 #                     driver.maximize_window()
 #                 except:
 #                     logging.debug('fail to max ,skip:'+traceback.format_exc())
-#                 raw_input(u'有答案無法填寫，請手動點擊答案並繳卷繼續！\n'.encode('big5'))
+#                 input(u'有答案無法填寫，請手動點擊答案並繳卷繼續！\n'.encode('big5'))
 #             else:
 #                 driver.switch_to_alert().accept()
         except:
@@ -757,10 +755,10 @@ class autoElearning():
             except Exception as e:
                 logging.error(e)
                 logging.error(traceback.format_exc())
-                a = raw_input(u'登入失敗,是否要重新輸入帳號密碼? (y/n)'.encode('big5'))
+                a = input(u'登入失敗,是否要重新輸入帳號密碼? (y/n)'.encode('big5'))
                 if a == 'y':
-                    ac = raw_input(u"請輸入{}網站帳號:".format(web).encode('big5'))
-                    pw = raw_input(u"請輸入{}網站密碼:".format(web).encode('big5'))
+                    ac = input(u"請輸入{}網站帳號:".format(web).encode('big5'))
+                    pw = input(u"請輸入{}網站密碼:".format(web).encode('big5'))
         return driver,qs
 
     def cleanText(self,text):
@@ -845,7 +843,7 @@ class detection_event(Thread):
                         logging.info(u'\t點擊繼續閱讀...')
                         btn.click()
                     driver.switch_to_frame(driver.find_element_by_id("menuframe"))
-                except Exception,e:
+                except Exception as e:
                     logging.error(e)
                 sleep(0.1)
 detection_event().start()

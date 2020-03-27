@@ -1,0 +1,9 @@
+﻿{
+  "name": "astar.ics.nativemessage.extension",
+  "description": "astar.ics.nativemessage.extension",
+  "path": "c:/ChromeExtensionNativeMessageHost.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://ckcbekccplejendliomnmcgnobhlfkok/"
+  ]
+}

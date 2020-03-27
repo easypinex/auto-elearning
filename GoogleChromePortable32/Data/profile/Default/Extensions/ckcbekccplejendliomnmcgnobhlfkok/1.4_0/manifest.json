@@ -1,0 +1,17 @@
+{
+   "background": {
+      "persistent": false,
+      "scripts": [ "event.js" ]
+   },
+   "browser_action": {
+      "default_icon": "Launcher.png",
+      "default_title": "Astar ICS Extension"
+   },
+   "description": "Astar ICS Extension",
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoeIm9kNfRWaF6eewkAxFQZqx52KcQjF7GIPANtZ4dC/VJQAiIX2d/dGUB3kNNtJUzO9bn4EZfcUPJtLWo5TtQ6cRKfYmHFBoPktJSwIDm5J9GvzTwTXAQ5EEIqEVB8Acdri3QKTHbzU5NDvpsb+N0DvAK+np+4X6m00jW3PH28UjyIlme8xhB9HMPqaupOf1XdBtj1qbSda7F9WpW0UwIwZO4/X3S8f/Q1dzljjjjNWvITmA++Xd1qXbvrlUEQxEeTTRS2RDlEcGbxi9oRRbhy3f4pmIghNp8AdiN1eVlgDok7WxiMT/8R1Vl3s8AXcdoNpte9CeESryriX+1/6OPwIDAQAB",
+   "manifest_version": 2,
+   "name": "Astar ICS",
+   "permissions": [ "nativeMessaging", "tabs" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.4"
+}
