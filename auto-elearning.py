@@ -28,8 +28,8 @@ class autoElearning():
     driver = None
     detection = False
     logging = None
-    
-    
+
+
     def run(self):
         ocr = True
         debug = False
@@ -49,8 +49,8 @@ class autoElearning():
         
         self.loadLog()
         web = u'員工' if not ocr else u'易學網'
-        ac = input(u"請輸入{}網站帳號:".format(web).encode('big5'))
-        pw = input(u"請輸入{}網站密碼:".format(web).encode('big5'))
+        ac = input(u"請輸入{}網站帳號:".format(web))
+        pw = input(u"請輸入{}網站密碼:".format(web))
         for i in range(30):
             print("")
             
@@ -71,8 +71,8 @@ class autoElearning():
             chrome_options.binary_location =chromePath
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
         except:
-            input(u'請至 https://sites.google.com/a/chromium.org/chromedriver/downloads 找尋符合的 ChromeDriver 並取代 (Enter)'.encode('big5'))
-            input(u'請確認chromePath.txt路徑正確 (Enter)'.encode('big5'))
+            input(u'請至 https://sites.google.com/a/chromium.org/chromedriver/downloads 找尋符合的 ChromeDriver 並取代 (Enter)')
+            input(u'請確認chromePath.txt路徑正確 (Enter)')
             chrome_options.binary_location = open('chromePath.txt').readlines()[0]
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
               
@@ -110,11 +110,11 @@ class autoElearning():
         classInfo = self.getClassInfo(driver.page_source)
         print("")
         for i,myclass in enumerate(classInfo):
-            print(i,myclass['name'].encode('big5'))
+            print(i,myclass['name'])
         print("")
         logging.debug("classInfo = "+str(classInfo))
         autoElearning.logging = logging
-        userChoose = input(u"請輸入需要上課課程 並以,分隔，全自動請輸入 all\n".encode('big5')).split(',')
+        userChoose = input(u"請輸入需要上課課程 並以,分隔，全自動請輸入 all\n").split(',')
         debug = '-f' in userChoose
         
         if userChoose[0] in ['all','ALL','All']:
@@ -124,12 +124,12 @@ class autoElearning():
             if (not myclass['ispass'] or myclass['score'] < 100) and str(i) in userChoose:
                 while True:
                     try:
-                        logging.info(u"進入課程:{} ({}/{})".format(myclass['name'],i+1,len(classInfo)).encode('big5'))
+                        logging.info(u"進入課程:{} ({}/{})".format(myclass['name'],i+1,len(classInfo)))
                         now = -1
                         doSomething = True
                         while doSomething:
                             doSomething = False
-                            logging.info(u'讀取子課程...'.encode('big5'))
+                            logging.info(u'讀取子課程...')
                             classBranchInfo = self.getClassBranchInfo(driver,myclass)
                             logging.debug("classBranchInfo = "+json.dumps(classBranchInfo,indent=2))
                             goToClasses,skipList = self.getNeedTolClass(classBranchInfo)
@@ -141,11 +141,11 @@ class autoElearning():
                                 logging.debug("goToClass="+json.dumps(goToClass,indent=2))
                                 if goToClass['type'] == 'scorm': ##上課
                                     doSomething = True
-                                    logging.info(u'\t進入子課程:{} ({}/{}) ...'.format(goToClass['name'],now+1,len(classBranchInfo)).encode('big5'))
+                                    logging.info(u'\t進入子課程:{} ({}/{}) ...'.format(goToClass['name'],now+1,len(classBranchInfo)))
                                     self.learner(driver,goToClass,learnTrueTime,learnRatio)
                                 elif goToClass['type'] == 'exam' and autoExam: ##考試
                                     doSomething = True
-                                    logging.info(u'\t考試:{} ({}/{})...'.format(goToClass['name'],now+1,len(classBranchInfo)).encode('big5'))
+                                    logging.info(u'\t考試:{} ({}/{})...'.format(goToClass['name'],now+1,len(classBranchInfo)))
                                     noSample = True
                                     noAnsLimit = 10
                                     answerList = self.getHaveAnswer(qs,driver,goToClass['url'])
@@ -172,11 +172,11 @@ class autoElearning():
                                             answerList = self.getHaveAnswer(qs,driver,goToClass['url'])
                                 elif goToClass['type'] == 'questionnaire' and autoExam:##問卷
                                     doSomething = True
-                                    logging.info(u'\t填寫問卷中 ...'.encode('big5'))
+                                    logging.info(u'\t填寫問卷中 ...')
                                     try:
                                         self.questionnaire(driver,qs,goToClass)
                                     except:
-                                        logging.info(u'\t填寫問卷失敗 ! (可能已填過)'.encode('big5'))
+                                        logging.info(u'\t填寫問卷失敗 ! (可能已填過)')
                         break
                     except:
                         logging.error(traceback.format_exc())
@@ -186,8 +186,8 @@ class autoElearning():
                     
                         
             else:
-                logging.info(u"跳過可結案課程或非選擇:{} ({}/{})".format(myclass['name'],i+1,len(classInfo)).encode('big5'))
-        logging.info(u"完成所有指定課程! Enter 結束!".encode('big5'))
+                logging.info(u"跳過可結案課程或非選擇:{} ({}/{})".format(myclass['name'],i+1,len(classInfo)))
+        logging.info(u"完成所有指定課程! Enter 結束!")
         input("")
     
     def getClassInfo(self,html):
@@ -273,7 +273,7 @@ class autoElearning():
                     if len(url) > 0:
                         forceClass = nowMin<needMin
                         if forceClass:
-                            logging.info(u'\t分鐘數不足 (已讀 {} 分鐘 , 需要 {} 分鐘) ,且已有考試,強制啟用閱讀'.format(nowMin,needMin).encode('big5'))
+                            logging.info(u'\t分鐘數不足 (已讀 {} 分鐘 , 需要 {} 分鐘) ,且已有考試,強制啟用閱讀'.format(nowMin,needMin))
                 elif type == 'questionnaire':
                     url = onclick[onclick.find('SCROMWrapper'):]
                     url = url[:url.find("'")]
@@ -329,9 +329,9 @@ class autoElearning():
         min = (classes*3) // 60
         sec = (classes*3) - 60*min
         if not TrueLearn:
-            logging.info(u"\t\t上課中...視訊量:{} 所需約:{} 分 {} 秒 ... ".format(classes,min,sec).encode('big5'))
+            logging.info(u"\t\t上課中...視訊量:{} 所需約:{} 分 {} 秒 ... ".format(classes,min,sec))
         else:
-            logging.info(u"\t\t上課中...視訊量:{}".format(classes).encode('big5'))
+            logging.info(u"\t\t上課中...視訊量:{}".format(classes))
         self.waitConsole(driver,'APIAdapter initialized')
 #         driver.execute_script('$(window).unbind("blur focusout");')
         learningTime,learnMin,learnSec,TotalSec = self.getLearnTime(driver,learnRatio)
@@ -378,11 +378,11 @@ class autoElearning():
         driver.switch_to.default_content()
         logging.debug("switch systemframe ...")
         driver.switch_to_frame(driver.find_element_by_id("systemframe"))
-        logging.debug(u"click 儲存並離開 ...".encode('big5'))
+        logging.debug(u"click 儲存並離開 ...")
         driver.find_element_by_xpath("//*[@value='儲存並離開']").click()
-        logging.debug(u"wait... 關閉 ...".encode('big5'))
+        logging.debug(u"wait... 關閉 ...")
         btn = WebDriverWait(driver,180).until(EC.element_to_be_clickable((By.CLASS_NAME, "button")))
-        logging.debug(u"click... 關閉 ...".encode('big5'))
+        logging.debug(u"click... 關閉 ...")
         btn.click()
         logging.debug("learn exit!")
 
@@ -421,7 +421,7 @@ class autoElearning():
         return learningTime,learnMin,learnSec,TotalSec
         
     def getHaveAnswer(self,qs,driver,url,BigExam = False):
-        logging.info(u"\t採樣中...".encode('big5'))
+        logging.info(u"\t採樣中...")
         examPK = url[url.find('ExamPK='):]
         examPK = examPK[:examPK.find('&')]
         answerList = []
@@ -448,8 +448,8 @@ class autoElearning():
 #             answerList = list(set(answerList))
 #         for DEBUG
 #         for ans,text in answerListFinal:
-#             print ans,text.encode('big5')
-        logging.info(u"\t收集答案數:"+str(len(answerListFinal)).encode('big5'))
+#             print ans,text
+        logging.info(u"\t收集答案數:"+str(len(answerListFinal)))
         return answerListFinal
             
     def getAnsUrlList(self, html):
@@ -587,7 +587,7 @@ class autoElearning():
         return answerList,ansList,noSample,startNum
     
     def clickAnswerSubmit(self,driver,answer,startNum,minSleepForOne,maxSleepForOne,hide=True):
-        logging.info(u'\t輸入答案: {} ...'.format(str(answer)).encode('big5'))
+        logging.info(u'\t輸入答案: {} ...'.format(str(answer)))
         try:
             driver.switch_to_alert().accept()
         except:
@@ -595,7 +595,7 @@ class autoElearning():
         driver.execute_script('$(window).unbind("blur focusout");')
         allHavaAns = True
         ansList = []
-        logging.info(u'\t答題數:{}'.format(len(answer)).encode('big5'))
+        logging.info(u'\t答題數:{}'.format(len(answer)))
         for i,ans in enumerate(answer):
             if ans == None:
                 ans = str(randint(1,2))
@@ -642,23 +642,23 @@ class autoElearning():
 #                 driver.switch_to_alert().dismiss()
 #                 ansListText = ""
 #                 for j,ansNum in enumerate(ansList):
-#                     ansListText+= u'題:{} 答: {}\t'.format(j+1,str(ansNum)).encode('big5')
+#                     ansListText+= u'題:{} 答: {}\t'.format(j+1,str(ansNum))
 #                     if j+1 % 3 == 0:
 #                         ansListText+='\n'
 #                 print ansListText
-#                 input(u'有答案無法填寫，請手動點擊答案！ 按下Eneter放大瀏覽器\n'.encode('big5'))
+#                 input(u'有答案無法填寫，請手動點擊答案！ 按下Eneter放大瀏覽器\n')
 #                 try:
 #                     driver.maximize_window()
 #                 except:
 #                     logging.debug('fail to max ,skip:'+traceback.format_exc())
-#                 input(u'有答案無法填寫，請手動點擊答案並繳卷繼續！\n'.encode('big5'))
+#                 input(u'有答案無法填寫，請手動點擊答案並繳卷繼續！\n')
 #             else:
 #                 driver.switch_to_alert().accept()
         except:
             pass
-        logging.info(u'\t繳卷成功!'.encode('big5'))
+        logging.info(u'\t繳卷成功!')
         score = driver.find_element_by_xpath('//span[@id="Score"]').text.split('分')[0]
-        logging.info(u'\t分數:{}'.format(score).encode('big5'))
+        logging.info(u'\t分數:{}'.format(score))
         
         return allHavaAns,score
     
@@ -698,17 +698,17 @@ class autoElearning():
         while True:
             try:
                 web = u'員工' if not ocr else u'易學網'
-                logging.info(u'登入中...'.encode('big5'))
+                logging.info(u'登入中...')
                 if not ocr:
                     qs = requests.session()
                     #登入
                     data = {'LoginDomain':'huanan.com.tw',
                                 'LoginId':ac,
                                 'LoginPassword':pw}
-                    logging.info(u'登入員工網站...'.encode('big5'))
+                    logging.info(u'登入員工網站...')
                     qs.post("http://staffnew.hncb.com.tw/Account/ADLogin", data)
                     #易學網
-                    logging.info(u'進入易學網...'.encode('big5'))
+                    logging.info(u'進入易學網...')
                     qs.post("http://staffnew.hncb.com.tw/Home/OtherSystem/d3cbdf9d-966e-4009-a2c3-93ff29b90fd6")
                     
                     driver.get('https://elearning.hncb.com.tw/WcmsModules/Portal/FullFrameLogin/index.aspx')
@@ -749,15 +749,15 @@ class autoElearning():
                 driver.switch_to_frame(driver.find_element_by_name("bottomframe"))
                 driver.switch_to_frame(driver.find_element_by_name("display"))
 
-                logging.info(u"登入成功!".encode('big5'))
+                logging.info(u"登入成功!")
                 break
             except Exception as e:
                 logging.error(e)
                 logging.error(traceback.format_exc())
-                a = input(u'登入失敗,是否要重新輸入帳號密碼? (y/n)'.encode('big5'))
+                a = input(u'登入失敗,是否要重新輸入帳號密碼? (y/n)')
                 if a == 'y':
-                    ac = input(u"請輸入{}網站帳號:".format(web).encode('big5'))
-                    pw = input(u"請輸入{}網站密碼:".format(web).encode('big5'))
+                    ac = input(u"請輸入{}網站帳號:".format(web))
+                    pw = input(u"請輸入{}網站密碼:".format(web))
         return driver,qs
 
     def cleanText(self,text):
@@ -818,7 +818,7 @@ class autoElearning():
         logFormatter = logging.Formatter("[%(asctime)s] %(message)s","%Y-%m-%d %H:%M:%S")
         logFormatter2 = logging.Formatter("[%(levelname)s][%(asctime)s] %(message)s","%Y-%m-%d %H:%M:%S")
         rootLogger = logging.getLogger()
-        fileHandler = logging.FileHandler("log.log",'w')
+        fileHandler = logging.FileHandler("log.log",'w', encoding='utf-8')
         fileHandler.setFormatter(logFormatter2)
         fileHandler.setLevel(logging.DEBUG)
         rootLogger.addHandler(fileHandler)
