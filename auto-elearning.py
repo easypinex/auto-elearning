@@ -222,6 +222,7 @@ class autoElearning():
         classUrl = 'https://elearning.hncb.com.tw/WcmsModules/OnLineClass/TopMain.aspx?{}&{}&Mode=S'.format(coursePK,classPK)
         driver.get(classUrl)
         try:
+            WebDriverWait(driver,3).until(EC.visibility_of_element_located((By.ID, "iframeTips")))
             driver.switch_to_frame("iframeTips")
             driver.find_element_by_id("btnCancelDialog").click()
             driver.switch_to.default_content()
@@ -369,7 +370,7 @@ class autoElearning():
                 sleep(0.5)
             logging.debug("exec script...:"+thisScript)
             driver.execute_script(thisScript)
-            
+            self.waitConsole(driver,'APIAdapter.prototype.LMSCommit')
             
             
             
@@ -405,7 +406,7 @@ class autoElearning():
             try:
                 driver.execute_script("""console.log("auto-learn:"+parent.window.$('#contentframe').contents().find('#myElement_controlbar_duration').text());""")
                 learningTime = self.waitConsole(driver, 'auto-learn:').split('"')[1].replace('auto-learn:','')
-                if learningTime == '00:00' or not learningTime: sleep(0.3)
+                if learningTime == '00:00' or not learningTime: sleep(0.5)
                 driver.get_log('browser')
             except:
                 logging.error(traceback.format_exc())
