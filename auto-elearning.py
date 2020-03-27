@@ -49,10 +49,8 @@ class autoElearning():
         
         self.loadLog()
         web = u'員工' if not ocr else u'易學網'
-        # ac = input(u"請輸入{}網站帳號:".format(web).encode('big5'))
-        # pw = input(u"請輸入{}網站密碼:".format(web).encode('big5'))
-        ac = 'hb15358'
-        pw = '!2Xjialjl'
+        ac = input(u"請輸入{}網站帳號:".format(web).encode('big5'))
+        pw = input(u"請輸入{}網站密碼:".format(web).encode('big5'))
         for i in range(30):
             print("")
             
@@ -70,6 +68,7 @@ class autoElearning():
         consoleLoader['loggingPrefs'] = { 'browser':'ALL'}
         try:
             chromePath = os.path.abspath(open('chromePath.txt').readlines()[0])
+            chrome_options.binary_location =chromePath
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
         except:
             input(u'請至 https://sites.google.com/a/chromium.org/chromedriver/downloads 找尋符合的 ChromeDriver 並取代 (Enter)'.encode('big5'))
