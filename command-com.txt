@@ -1,0 +1,2 @@
+parent.window.API.LMSSetValue("cmi.core.lesson_status", "completed");
+parent.window.API.LMSCommit();
