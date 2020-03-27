@@ -51,6 +51,8 @@ class autoElearning():
         web = u'員工' if not ocr else u'易學網'
         ac = input(u"請輸入{}網站帳號:".format(web))
         pw = input(u"請輸入{}網站密碼:".format(web))
+        # ac = 'hb15358'
+        # pw = '!qazxsw2'
         for i in range(30):
             print("")
             
@@ -222,7 +224,7 @@ class autoElearning():
         classUrl = 'https://elearning.hncb.com.tw/WcmsModules/OnLineClass/TopMain.aspx?{}&{}&Mode=S'.format(coursePK,classPK)
         driver.get(classUrl)
         try:
-            WebDriverWait(driver,3).until(EC.visibility_of_element_located((By.ID, "iframeTips")))
+            WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.ID, "iframeTips")))
             driver.switch_to_frame("iframeTips")
             driver.find_element_by_id("btnCancelDialog").click()
             driver.switch_to.default_content()
@@ -255,14 +257,15 @@ class autoElearning():
             url = ''
             if onclick != '': 
                 if type == 'scorm':
-                    onclick = onclick.replace("'GoToClassRoom('","").replace("')","")
-                    onclick = onclick.split(',')
-                    url = onclick[0].replace("'","").replace('GoToClassRoom(',"")
-                    rid = url.replace("http://elearning.hncb.com.tw:82/","").split("/")[-2]
-                    cacheKey = onclick[1].replace("'","")
-                    classID = onclick[2].replace("'","")
+                    onclick1 = onclick.replace("GoToClassRoom('","").replace("')","")
+                    onclick1 = onclick1.split(',')
+                    url = onclick1[0].replace("'","")
+                    cacheKey = onclick1[1].replace("'","")
+                    classID = onclick1[2].replace("'","")
+                    rid = onclick1[3].replace("'","")
                     catch = url.replace('http://elearning.hncb.com.tw:82/','')
-                    catch = catch.split('/')[0]
+                    catch = 'Class_' + catch.split('/')[0]
+                    # https://elearning.hncb.com.tw/WcmsModules/OnLineClass/OpenScormReader.aspx?classID=B202003050001&RID=rc-2cfb49f3-e827-4d1d-a8e3-74a83a96473a&cacheKey=Class_c82ae038-a396-41d8-9fd2-e754b4a4fb74&readerURL=http%3A//elearning.hncb.com.tw%3A82/69a25b72-0777-4d0d-aee9-2d651db5989b/rcdata/privatecourse/rc-2cfb49f3-e827-4d1d-a8e3-74a83a96473a/%24startup
                     url = 'https://elearning.hncb.com.tw/WcmsModules/OnLineClass/OpenScormReader.aspx?classID={classID}&RID={rid}&cacheKey={cacheKey}&readerURL={url}'.format(
                         classID = classID,
                         rid = rid,
@@ -281,6 +284,7 @@ class autoElearning():
             ClassBranchInfo.append({'type':type,
                                     'name':name,
                                     'url':url,
+                                    'onclick':onclick,
                                     'force':forceClass,
                                     'finished':finished,
                                     'nowMin':nowMin,
@@ -311,9 +315,16 @@ class autoElearning():
         
         logging.debug("into:"+classBranch['url'])
         driver.get_log('browser')
+        loaded = False
+        while not loaded:
+            try:
         driver.get(classBranch['url'])
         logging.debug("wait by contentframe ...")
-        WebDriverWait(driver,30).until(EC.visibility_of_element_located((By.ID, "contentframe")))
+                WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.ID, "contentframe")))
+                loaded = True
+            except:
+                logging.debug("page is error? try again...")
+        logging.debug("wait by contentframe ...")
         WebDriverWait(driver,30).until(EC.visibility_of_element_located((By.ID, "menuframe")))
         learnAll = classBranch['nowMin'] < classBranch['needMin']
         if learnAll:
@@ -369,10 +380,10 @@ class autoElearning():
                 autoElearning.detection = False
                 sleep(0.5)
             logging.debug("exec script...:"+thisScript)
+            driver.get_log('browser')
             driver.execute_script(thisScript)
-            self.waitConsole(driver,'APIAdapter.prototype.LMSCommit')
-            
-            
+            self.waitConsole(driver,'API.LMSSetValue(cmi.core.lesson_status, completed)')
+            sleep(1)
             
         sleep(2)
         logging.debug("switch_to.default_content ...")
@@ -402,12 +413,15 @@ class autoElearning():
     def getLearnTime(self,driver,learnRatio):
         driver.get_log('browser')
         learningTime = '00:00'
-        while learningTime == '00:00' or not learningTime:
+        while learningTime == '00:00' or learningTime == None:
             try:
                 driver.execute_script("""console.log("auto-learn:"+parent.window.$('#contentframe').contents().find('#myElement_controlbar_duration').text());""")
-                learningTime = self.waitConsole(driver, 'auto-learn:').split('"')[1].replace('auto-learn:','')
-                if learningTime == '00:00' or not learningTime: sleep(0.5)
+                learningTime = self.waitConsole(driver, 'auto-learn:')
                 driver.get_log('browser')
+                if learningTime != None:
+                    learningTime = learningTime.split('"')[1].replace('auto-learn:','')
+                if learningTime == '00:00' or learningTime == None:
+                    sleep(0.5)
             except:
                 logging.error(traceback.format_exc())
         logging.debug('learningTime={}'.format(learningTime))
