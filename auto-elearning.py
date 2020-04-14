@@ -413,14 +413,14 @@ class autoElearning():
     def getLearnTime(self,driver,learnRatio):
         driver.get_log('browser')
         learningTime = '00:00'
-        while learningTime == '00:00' or learningTime == None or learningTime.strip() == '':
+        while learningTime == '00:00' or learningTime == None or '' == learningTime:
             try:
                 driver.execute_script("""console.log("auto-learn:"+parent.window.$('#contentframe').contents().find('#myElement_controlbar_duration').text());""")
                 learningTime = self.waitConsole(driver, 'auto-learn:')
                 driver.get_log('browser')
                 if learningTime != None:
                     learningTime = learningTime.split('"')[1].replace('auto-learn:','')
-                if learningTime == '00:00' or learningTime == None or learningTime.strip() == '':
+                if learningTime == '00:00' or learningTime == None '' == learningTime:
                     sleep(0.5)
             except:
                 logging.error(traceback.format_exc())
