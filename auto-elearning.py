@@ -60,13 +60,15 @@ class autoElearning():
         chrome_options = webdriver.ChromeOptions()
         #Disable Audio
         chrome_options.add_argument("--mute-audio")
+        #Disalbe SSL
+        chrome_options.add_argument('--ignore-ssl-errors')
+        chrome_options.add_argument('--ignore-certificate-errors')
         #Flash Player Allow
         prefs = {"profile.default_content_setting_values.plugins": 1,
                 "profile.content_settings.plugin_whitelist.adobe-flash-player": 1,
                 "profile.content_settings.exceptions.plugins.*,*.per_resource.adobe-flash-player": 1,
                 "PluginsAllowedForUrls": "http://elearning.hncb.com.tw:82"}
         chrome_options.add_experimental_option("prefs",prefs)
-        chrome_options.add_argument('--ignore-certificate-errors')
         #Console Log
         consoleLoader = DesiredCapabilities.CHROME
         consoleLoader['loggingPrefs'] = { 'browser':'ALL'}
