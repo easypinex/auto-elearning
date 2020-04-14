@@ -420,7 +420,7 @@ class autoElearning():
                 driver.get_log('browser')
                 if learningTime != None:
                     learningTime = learningTime.split('"')[1].replace('auto-learn:','')
-                if learningTime == '00:00' or learningTime == None '' == learningTime:
+                if learningTime == '00:00' or learningTime == None or '' == learningTime:
                     sleep(0.5)
             except:
                 logging.error(traceback.format_exc())
