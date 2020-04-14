@@ -7,7 +7,7 @@ Build or Run source code notice:
 1.Check you enviromment install below list:
         1-1.Python 3.7.
         1-2.Python Package-PIL  (After install Python 3.7 , command "pip install Pillow" on cmd.exe)
-        1-3.Python Package-requests (After install Python 3.7 , command "pip install requests" on cmd.exe).
+        1-3.Python Package-requests (After install Python 3.7 , command "pip install requests==2.11.1" on cmd.exe).
         1-4.Python Package-selenium (After install Python 3.7 , command "pip install selenium" on cmd.exe).
         1-5.Python Package-Numpy (After install Python 3.7 , command "pip install numpy" on cmd).
  	1-6.Python Package-Configparser (After install Python 3.7 , command "pip install configparser" on cmd).
