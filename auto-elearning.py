@@ -457,7 +457,7 @@ class autoElearning():
             
         for ansurl in answerUrlList:
             if not BigExam:
-                text = qs.get(ansurl, verify=False).text
+                text = qs.get(ansurl).text
             else:
                 driver.get(ansurl)
                 text = driver.page_source
