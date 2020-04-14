@@ -450,19 +450,18 @@ class autoElearning():
         answerListFinal = []
         if not BigExam:
             examListUrl = "https://elearning.hncb.com.tw/WcmsModules/OnLineClass/ExamModule/QueryScore.aspx?" + examPK
-            text = qs.get(examListUrl).text
+            driver.get(examListUrl)
+            text = driver.page_source
             answerUrlList = self.getAnsUrlList(text)
         else:
             examListUrl = url
-            text = qs.get(examListUrl).text
+            driver.get(examListUrl)
+            text = driver.page_source
             answerUrlList = self.getAnsUrlList_BigExam(text)
             
         for ansurl in answerUrlList:
-            if not BigExam:
-                text = qs.get(ansurl).text
-            else:
-                driver.get(ansurl)
-                text = driver.page_source
+            driver.get(ansurl)
+            text = driver.page_source
             answerList = answerList + self.examParser(text,BigExam)
             for ans in answerList:
                 if ans not in answerListFinal:
