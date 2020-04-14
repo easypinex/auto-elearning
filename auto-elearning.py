@@ -338,8 +338,8 @@ class autoElearning():
         html = driver.page_source
         tree = etree.HTML(html)
         classes = len(tree.xpath('//ul[@class="k-group k-treeview-lines"]')[0])
-        min = (classes*3) // 60
-        sec = (classes*3) - 60*min
+        min = (classes*6) // 60
+        sec = (classes*6) - 60*min
         if not TrueLearn:
             logging.info(u"\t\t上課中...視訊量:{} 所需約:{} 分 {} 秒 ... ".format(classes,min,sec))
         else:
@@ -383,7 +383,7 @@ class autoElearning():
             driver.get_log('browser')
             driver.execute_script(thisScript)
             self.waitConsole(driver,'API.LMSSetValue(cmi.core.lesson_status, completed)')
-            sleep(1)
+            sleep(3)
             
         sleep(2)
         logging.debug("switch_to.default_content ...")
