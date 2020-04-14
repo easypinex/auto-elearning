@@ -476,9 +476,9 @@ class autoElearning():
     def getAnsUrlList(self, html):
         anslist = []
         tree = etree.HTML(html)
-        table = tree.xpath('//table[@width="90%"]')[1][1:]
-        for e in table:
-            td = e.xpath('td')[-1]
+        table = tree.xpath('//table[@width="90%"]/tbody/tr')[2:]
+        for tr in table:
+            td = tr.xpath('td')[-1]
             lastUrl = etree.tostring(td).decode('utf-8').split('window.open(\'')[-1].split('\');" ')[0]
             lastUrl = lastUrl.replace('&amp;', "&")
             anslist.append('https://elearning.hncb.com.tw/WcmsModules/OnLineClass/ExamModule/' + lastUrl)
@@ -499,13 +499,13 @@ class autoElearning():
         mlist = []
         tree = etree.HTML(html)
         if not BigExam:
-            table = tree.xpath('//*[@id="form1"]/div/table[@width="100%"][1]/tr[2]/td/table[3]/tr/td')
+            table = tree.xpath('//*[@id="form1"]/div/table[@width="100%"]/tbody/tr[2]/td/table[3]/tbody/tr/td')
             
             for box in table:
                 q = box.xpath('span[1]')[0].xpath('normalize-space()')
                 if u'是非題,共' in q or u'單選題,共' in q or u'複選題,共' in q:
                     continue
-                ansbox = box.xpath('table/tr')
+                ansbox = box.xpath('table/tbody/tr')
                 ans = ""
                 if len(ansbox) <= 3:
                     # 是非題
