@@ -452,7 +452,7 @@ class autoElearning():
             
         for ansurl in answerUrlList:
             if not BigExam:
-                text = requests.get(ansurl).text
+                text = requests.get(ansurl, verify=False).text
             else:
                 driver.get(ansurl)
                 text = driver.page_source
