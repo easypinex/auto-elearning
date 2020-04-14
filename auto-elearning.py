@@ -842,8 +842,8 @@ class autoElearning():
         consoleHandler.setLevel(logging.INFO)
         rootLogger.addHandler(consoleHandler)
         rootLogger.setLevel(logging.DEBUG)
-        logging.getLogger("requests").setLevel(logging.WARNING)
-        logging.getLogger("selenium").setLevel(logging.WARNING)
+        logging.getLogger("requests").setLevel(logging.ERROR)
+        logging.getLogger("selenium").setLevel(logging.ERROR)
 class detection_event(Thread):
     def run(self):
         while True:
