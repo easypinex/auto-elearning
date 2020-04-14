@@ -33,14 +33,11 @@ class autoElearning():
     def run(self):
         ocr = True
         debug = False
-        BigExam = False
-        BigExamUrl = 'https://elearning.hncb.com.tw/WcmsModules/Exam/ExamModule/ExamInfo.aspx?ExamPK=3642'
-        BigExamAnsListUrl = 'https://elearning.hncb.com.tw/_service/omega/pretest/listOuterClassScore.asp?Func=listAllScore&UserPK=12018&ExamPK=3642'
-        
-        
         config = configparser.ConfigParser()
         config.read('setting.properties')
-        
+        BigExam = str(config['default']['BigExam']) == 'True'
+        BigExamUrl = config['default']['BigExamUrl']
+        BigExamAnsListUrl = config['default']['BigExamAnsListUrl']
         learnTrueTime = str(config['default']['learnTrueTime']) == 'True'
         learnRatio = float(config['default']['learnRatio'])
         ansOneMinTime = int(config['default']['ansOneMinTime'])
@@ -84,6 +81,9 @@ class autoElearning():
         
         if BigExam:
             answerList = self.getHaveAnswer(qs,driver,BigExamAnsListUrl,BigExam=True)
+            open('ans.txt','w',encoding='utf-8').write(str(answerList))
+            if(not autoExam):
+                return 
             noSample = True
             while noSample:
                 driver.get(BigExamUrl)
@@ -591,8 +591,8 @@ class autoElearning():
                     if i == 0:
                         startNum = id
                     for ansText, q in answerList:
-                        if self.cleanText(examqutionText) in self.cleanText(q):
-                            if self.cleanText(examOptionText) in self.cleanText(ansText):
+                        if self.cleanText(examqutionText) == self.cleanText(q):
+                            if self.cleanText(examOptionText) == self.cleanText(ansText):
                                 ansList.append(str(j+1))
                                 find = True
                                 break
@@ -619,7 +619,7 @@ class autoElearning():
             sleep(randint(minSleepForOne,maxSleepForOne))
             if type(ans) is str:
                 fullId = 'QuestionItemList_ctl{}_isAnswer_{}'.format(str(int(startNum)+i).zfill(2),int(ans)-1)
-#                 el = driver.find_elements_by_id(fullId)[-1]
+#                 el = driver.find_elements_by_id(fullId)[-1] 
                 driver.find_element_by_xpath("//input[@id='{}']".format(fullId)).click()
 #                 el = driver.find_element_by_xpath("//input[@id='{}']".format(fullId))
 #                 action = webdriver.common.action_chains.ActionChains(driver)
