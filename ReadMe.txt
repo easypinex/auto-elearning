@@ -1,3 +1,9 @@
+
+Notice:
+If you just want use it , don't read below , 
+just setting seeting.properties , and open auto-elearning.exe.
+
+Build or Run source code notice:
 1.Check you enviromment install below list:
         1-1.Python 3.7.
         1-2.Python Package-PIL  (After install Python 3.7 , command "pip install Pillow" on cmd.exe)
@@ -9,3 +15,5 @@
         1-8.Optional - (After install Python 3.7 , command "pip install pyinstaller" on cmd).
 2.Command "python auto-elearning.py" on cmd.exe.
 3.Down!
+
+P.S. if you want build yourself , command 'pyinstaller -F -c --hidden-import="pkg_resources.py2_warn" auto-elearning.py'
