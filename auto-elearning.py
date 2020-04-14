@@ -34,10 +34,10 @@ class autoElearning():
         ocr = True
         debug = False
         config = configparser.ConfigParser()
-        config.read('setting.properties')
+        config.read('setting.properties',encoding='big5')
         BigExam = str(config['default']['BigExam']) == 'True'
-        BigExamUrl = config['default']['BigExamUrl']
-        BigExamAnsListUrl = config['default']['BigExamAnsListUrl']
+        BigExamUrl = str(config['default']['BigExamUrl'])
+        BigExamAnsListUrl = str(config['default']['BigExamAnsListUrl'])
         learnTrueTime = str(config['default']['learnTrueTime']) == 'True'
         learnRatio = float(config['default']['learnRatio'])
         ansOneMinTime = int(config['default']['ansOneMinTime'])
