@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities 
 import requests
+from urllib3.exceptions import InsecureRequestWarning
 from random import randint
 import json
 import traceback
@@ -23,7 +24,8 @@ import os#
 from subprocess import check_output,STDOUT#
 import codecs#
 
-
+# Suppress only the single warning from urllib3 needed.
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 class autoElearning():
     driver = None
     detection = False
@@ -52,7 +54,7 @@ class autoElearning():
         # pw = '!qazxsw2'
         for i in range(30):
             print("")
-            
+
         chrome_options = webdriver.ChromeOptions()
         #Disable Audio
         chrome_options.add_argument("--mute-audio")
