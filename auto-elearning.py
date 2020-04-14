@@ -62,6 +62,7 @@ class autoElearning():
                 "profile.content_settings.exceptions.plugins.*,*.per_resource.adobe-flash-player": 1,
                 "PluginsAllowedForUrls": "http://elearning.hncb.com.tw:82"}
         chrome_options.add_experimental_option("prefs",prefs)
+        chrome_options.add_argument('--ignore-certificate-errors')
         #Console Log
         consoleLoader = DesiredCapabilities.CHROME
         consoleLoader['loggingPrefs'] = { 'browser':'ALL'}
