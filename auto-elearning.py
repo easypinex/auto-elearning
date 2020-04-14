@@ -383,7 +383,7 @@ class autoElearning():
             driver.get_log('browser')
             driver.execute_script(thisScript)
             self.waitConsole(driver,'API.LMSSetValue(cmi.core.lesson_status, completed)')
-            sleep(3)
+            sleep(1)
             
         sleep(2)
         logging.debug("switch_to.default_content ...")
