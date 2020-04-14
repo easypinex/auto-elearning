@@ -721,6 +721,7 @@ class autoElearning():
                 logging.info(u'登入中...')
                 if not ocr:
                     qs = requests.session()
+                    qs.verify = False
                     #登入
                     data = {'LoginDomain':'huanan.com.tw',
                                 'LoginId':ac,
@@ -764,6 +765,7 @@ class autoElearning():
                     driver.find_elements_by_id("button")[0].click()
                     os.remove(fileName)
                 qs = requests.session()
+                qs.verify = False
                 for cookie in driver.get_cookies():
                     qs.cookies.set(cookie['name'], cookie['value'])
                 driver.switch_to_frame(driver.find_element_by_name("bottomframe"))
