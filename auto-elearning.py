@@ -26,6 +26,8 @@ import codecs#
 
 # Suppress only the single warning from urllib3 needed.
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':AES256-GCM-SHA384'
+
 class autoElearning():
     driver = None
     detection = False
