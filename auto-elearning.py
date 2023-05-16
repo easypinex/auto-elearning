@@ -23,16 +23,18 @@ import numpy as np#
 import os#
 from subprocess import check_output,STDOUT#
 import codecs#
+from getpass import getpass
 
 # Suppress only the single warning from urllib3 needed.
-requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':AES256-GCM-SHA384'
+# requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+# requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':AES256-GCM-SHA384'
 
+elearning_domain = 'https://elearning.taiwanlife.com'
 class autoElearning():
     driver = None
     detection = False
     logging = None
-
+    
 
     def run(self):
         ocr = True
@@ -49,13 +51,11 @@ class autoElearning():
         autoExam = str(config['default']['autoExam']) == 'True'
         
         self.loadLog()
-        web = u'員工' if not ocr else u'易學網'
-        ac = input(u"請輸入{}網站帳號:".format(web))
-        pw = input(u"請輸入{}網站密碼:".format(web))
-        # ac = 'hb15358'
-        # pw = '!qazxsw2'
-        for i in range(30):
-            print("")
+        web = u'數位學習平台'
+        # ac = input(u"請輸入{}網站帳號:".format(web))
+        # pw = getpass(u"請輸入{}網站密碼:".format(web))
+        ac = '196693'
+        pw = 'eL19941019'
 
         chrome_options = webdriver.ChromeOptions()
         #Disable Audio
@@ -67,7 +67,7 @@ class autoElearning():
         prefs = {"profile.default_content_setting_values.plugins": 1,
                 "profile.content_settings.plugin_whitelist.adobe-flash-player": 1,
                 "profile.content_settings.exceptions.plugins.*,*.per_resource.adobe-flash-player": 1,
-                "PluginsAllowedForUrls": "http://elearning.hncb.com.tw:82"}
+                "PluginsAllowedForUrls": elearning_domain}
         chrome_options.add_experimental_option("prefs",prefs)
         #Console Log
         consoleLoader = DesiredCapabilities.CHROME
@@ -76,13 +76,13 @@ class autoElearning():
             chromePath = os.path.abspath(open('chromePath.txt').readlines()[0])
             chrome_options.binary_location =chromePath
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
-        except:
-            input(u'請至 https://sites.google.com/a/chromium.org/chromedriver/downloads 找尋符合的 ChromeDriver 並取代 (Enter)')
+        except Exception as e :
+            input(u'請至 https://chromedriver.chromium.org/downloads 找尋符合的 ChromeDriver 並取代 (Enter)')
             input(u'請確認chromePath.txt路徑正確 (Enter)')
             chrome_options.binary_location = open('chromePath.txt').readlines()[0]
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
               
-        driver,qs = self.logging(driver,ac,pw,hide=True,ocr = ocr)
+        driver,qs = self.logging(driver,ac,pw,hide=True)
         
         
         
@@ -160,7 +160,7 @@ class autoElearning():
                                     answerList = self.getHaveAnswer(qs,driver,goToClass['url'])
                                     beforeLen = -1
                                     while noSample:
-                                        url = 'https://elearning.hncb.com.tw/WcmsModules/OnLineClass/'+goToClass['url']
+                                        url = elearning_domain + '/WcmsModules/OnLineClass/'+goToClass['url']
                                         driver.get(url)
                                         driver.find_element_by_id("startBtn").click()
                                         try:
@@ -201,7 +201,7 @@ class autoElearning():
     
     def getClassInfo(self,html):
         tree = etree.HTML(html)
-        table = tree.xpath('//div[@id="ctl00_ContentPlaceHolder1_PageLayout1_ctl02_panel1"]')[0]
+        table = tree.xpath('//*[@id="tabContent"]/div/div[2]/section/div/div/div[3]/div[1]/ul/li')[0]
         myclasses = table.xpath('//fieldset/table[@class="table"]/tbody')[0][1:]
         classInfo = []
         
@@ -228,7 +228,7 @@ class autoElearning():
     def getClassBranchInfo(self,driver,myclass):
         coursePK = myclass['coursePK'].replace('coursePK','CoursePK')
         classPK = myclass['classPK'].replace('classPK','ClassPK')
-        classUrl = 'https://elearning.hncb.com.tw/WcmsModules/OnLineClass/TopMain.aspx?{}&{}&Mode=S'.format(coursePK,classPK)
+        classUrl = elearning_domain + '/WcmsModules/OnLineClass/TopMain.aspx?{}&{}&Mode=S'.format(coursePK,classPK)
         driver.get(classUrl)
         try:
             WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.ID, "iframeTips")))
@@ -270,10 +270,10 @@ class autoElearning():
                     cacheKey = onclick1[1].replace("'","")
                     classID = onclick1[2].replace("'","")
                     rid = onclick1[3].replace("'","")
-                    catch = url.replace('http://elearning.hncb.com.tw:82/','')
+                    catch = url.replace(elearning_domain,'')
                     catch = 'Class_' + catch.split('/')[0]
-                    # https://elearning.hncb.com.tw/WcmsModules/OnLineClass/OpenScormReader.aspx?classID=B202003050001&RID=rc-2cfb49f3-e827-4d1d-a8e3-74a83a96473a&cacheKey=Class_c82ae038-a396-41d8-9fd2-e754b4a4fb74&readerURL=http%3A//elearning.hncb.com.tw%3A82/69a25b72-0777-4d0d-aee9-2d651db5989b/rcdata/privatecourse/rc-2cfb49f3-e827-4d1d-a8e3-74a83a96473a/%24startup
-                    url = 'https://elearning.hncb.com.tw/WcmsModules/OnLineClass/OpenScormReader.aspx?classID={classID}&RID={rid}&cacheKey={cacheKey}&readerURL={url}'.format(
+                    # /WcmsModules/OnLineClass/OpenScormReader.aspx?classID=B202003050001&RID=rc-2cfb49f3-e827-4d1d-a8e3-74a83a96473a&cacheKey=Class_c82ae038-a396-41d8-9fd2-e754b4a4fb74&readerURL=http%3A//elearning.hncb.com.tw%3A82/69a25b72-0777-4d0d-aee9-2d651db5989b/rcdata/privatecourse/rc-2cfb49f3-e827-4d1d-a8e3-74a83a96473a/%24startup
+                    url = elearning_domain + '/WcmsModules/OnLineClass/OpenScormReader.aspx?classID={classID}&RID={rid}&cacheKey={cacheKey}&readerURL={url}'.format(
                         classID = classID,
                         rid = rid,
                         cacheKey = cacheKey,
@@ -449,7 +449,7 @@ class autoElearning():
         answerList = []
         answerListFinal = []
         if not BigExam:
-            examListUrl = "https://elearning.hncb.com.tw/WcmsModules/OnLineClass/ExamModule/QueryScore.aspx?" + examPK
+            examListUrl = elearning_domain + "/WcmsModules/OnLineClass/ExamModule/QueryScore.aspx?" + examPK
             driver.get(examListUrl)
             text = driver.page_source
             answerUrlList = self.getAnsUrlList(text)
@@ -481,7 +481,7 @@ class autoElearning():
             td = tr.xpath('td')[-1]
             lastUrl = etree.tostring(td).decode('utf-8').split('window.open(\'')[-1].split('\');" ')[0]
             lastUrl = lastUrl.replace('&amp;', "&")
-            anslist.append('https://elearning.hncb.com.tw/WcmsModules/OnLineClass/ExamModule/' + lastUrl)
+            anslist.append(elearning_domain + '/WcmsModules/OnLineClass/ExamModule/' + lastUrl)
         return anslist
     
     def getAnsUrlList_BigExam(self, html):
@@ -492,7 +492,7 @@ class autoElearning():
             td = e.xpath('td')[-1]
             lastUrl = etree.tostring(td).decode('utf-8').split('window.open(\'')[-1].split('\',\'\',\'')[0]
             lastUrl = lastUrl.replace('&amp;', "&")
-            anslist.append('https://elearning.hncb.com.tw/_service/omega/pretest/' + lastUrl)
+            anslist.append(elearning_domain + '/_service/omega/pretest/' + lastUrl)
         return anslist
     
     def examParser(self, html,BigExam=False):
@@ -692,7 +692,7 @@ class autoElearning():
         userPK = html[html.find('UserPK='):]
         userPK = userPK[:userPK.find('&')]
         userPK = userPK.replace('UserPK=',"")
-        driver.get('https://elearning.hncb.com.tw/_service/omega/survey2/DoClassSurveyforMobile.asp?PK={}'.format(PK))
+        driver.get(elearning_domain + '/_service/omega/survey2/DoClassSurveyforMobile.asp?PK={}'.format(PK))
         for i in range(4):
             driver.switch_to_alert().accept()
         html = driver.page_source
@@ -704,7 +704,7 @@ class autoElearning():
         for i,radio in enumerate(radios):
             data[radio.get(b'name')] = radio.get(b'value')
             data["qid"+radio.get(b'name').replace("Q","")] = str(i+1)
-        rs = qs.post('https://elearning.hncb.com.tw/_service/omega/survey2/ActionSurveyScoreMobile.asp',data = data)
+        rs = qs.post(elearning_domain + '/_service/omega/survey2/ActionSurveyScoreMobile.asp',data = data)
         
     
         
@@ -715,56 +715,20 @@ class autoElearning():
     
     
     
-    def logging(self,driver,ac,pw,hide = True,ocr = False):
+    def logging(self,driver,ac,pw,hide = True):
         qs = requests.Session()
         qs.verify = False
         while True:
             try:
-                web = u'員工' if not ocr else u'易學網'
+                web = u'數位學習平台'
                 logging.info(u'登入中...')
-                if not ocr:
-                    #登入
-                    data = {'LoginDomain':'huanan.com.tw',
-                                'LoginId':ac,
-                                'LoginPassword':pw}
-                    logging.info(u'登入員工網站...')
-                    qs.post("http://staffnew.hncb.com.tw/Account/ADLogin", data)
-                    #易學網
-                    logging.info(u'進入易學網...')
-                    qs.post("http://staffnew.hncb.com.tw/Home/OtherSystem/d3cbdf9d-966e-4009-a2c3-93ff29b90fd6")
-                    
-                    driver.get('https://elearning.hncb.com.tw/WcmsModules/Portal/FullFrameLogin/index.aspx')
-                    driver.delete_all_cookies()
-                    for cookie in qs.cookies:
-                        if ("elearning" in cookie.domain):
-                            newCookie = {'domain':cookie.domain,
-                                               'name':cookie.name,
-                                               'value':cookie.value,
-                                               'path':"/",
-                                               'expires':None}
-                            driver.add_cookie(newCookie)
-                else:
-                    driver.get('https://elearning.hncb.com.tw/WcmsModules/Portal/FullFrameLogin/index.aspx')
-                    sleep(0.5)
-                    img = driver.find_elements_by_tag_name('img')[0]
-                    fileName = 'screenshot.png'
-                    self.get_captcha(driver, img, fileName)
-                    im = Image.open(fileName)
-                    im = np.array(im)
-                    im = self.cleanCodeImg(im)
-                    im = Image.fromarray(im)
-                    im.save(fileName)
-                    code = self.image_to_string('screenshot.png', True, '')
-                    driver.find_elements_by_id("UserID")[0].send_keys(ac)
-                    driver.find_elements_by_id("Password")[0].send_keys(pw)
-                    driver.find_elements_by_id("captcha")[0].send_keys(code)
+                driver.get(elearning_domain + '/WcmsModules/Portal/FullFrameLogin/index.aspx')
+                sleep(0.5)
+                driver.find_elements_by_id("UserID")[0].send_keys(ac)
+                driver.find_elements_by_id("Password")[0].send_keys(pw)
                     
                 if hide :driver.set_window_position(-10000,0)
-                if not ocr:
-                    driver.get('https://elearning.hncb.com.tw/Index.aspx')
-                if ocr:
-                    driver.find_elements_by_id("button")[0].click()
-                    os.remove(fileName)
+                driver.find_elements_by_id("btnSignIn")[0].click()
                 for cookie in driver.get_cookies():
                     qs.cookies.set(cookie['name'], cookie['value'])
                 driver.switch_to_frame(driver.find_element_by_name("bottomframe"))
@@ -788,7 +752,7 @@ class autoElearning():
     
     
     def goToHome(self,driver):
-        driver.get('https://elearning.hncb.com.tw/Index.aspx')
+        driver.get(elearning_domain + '/Index.aspx')
         driver.switch_to_frame(driver.find_element_by_name("bottomframe"))
         driver.switch_to_frame(driver.find_element_by_name("display"))
         return driver
