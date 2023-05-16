@@ -73,8 +73,6 @@ class autoElearning():
         consoleLoader = DesiredCapabilities.CHROME
         consoleLoader['loggingPrefs'] = { 'browser':'ALL'}
         try:
-            chromePath = os.path.abspath(open('chromePath.txt').readlines()[0])
-            chrome_options.binary_location =chromePath
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
         except Exception as e :
             input(u'請至 https://chromedriver.chromium.org/downloads 找尋符合的 ChromeDriver 並取代 (Enter)')
