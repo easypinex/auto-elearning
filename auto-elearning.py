@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities 
+
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 from random import randint
@@ -33,12 +34,12 @@ elearning_domain = 'https://elearning.taiwanlife.com'
 class autoElearning():
     driver = None
     detection = False
-    logging = None
+    loggin = None
     
 
     def run(self):
         ocr = True
-        debug = False
+        debug = True
         config = configparser.ConfigParser()
         config.read('setting.properties',encoding='big5')
         BigExam = str(config['default']['BigExam']) == 'True'
@@ -80,7 +81,7 @@ class autoElearning():
             chrome_options.binary_location = open('chromePath.txt').readlines()[0]
             driver = webdriver.Chrome('chromedriver.exe',chrome_options=chrome_options,desired_capabilities=consoleLoader)
               
-        driver,qs = self.logging(driver,ac,pw,hide=True)
+        driver,qs = self.loggin(driver,ac,pw,hide=False)
         
         
         
@@ -92,7 +93,7 @@ class autoElearning():
             noSample = True
             while noSample:
                 driver.get(BigExamUrl)
-                driver.find_element_by_id("startBtn").click()
+                driver.find_element(By.ID, "startBtn").click()
                 try:
                     driver.switch_to_alert().accept()
                 except:
@@ -113,18 +114,19 @@ class autoElearning():
         
         
         
-        
+        WebDriverWait(driver,10).until(EC.visibility_of_element_located((By.CLASS_NAME, "timeline")))
         classInfo = self.getClassInfo(driver.page_source)
         print("")
         for i,myclass in enumerate(classInfo):
             print(i,myclass['name'])
         print("")
         logging.debug("classInfo = "+str(classInfo))
-        autoElearning.logging = logging
-        userChoose = input(u"請輸入需要上課課程 並以,分隔，全自動請輸入 all\n").split(',')
-        debug = '-f' in userChoose
+        autoElearning.loggin = logging
+        if not debug:
+            userChoose = input(u"請輸入需要上課課程 並以,分隔，全自動請輸入 all\n").split(',')
+            debug = '-f' in userChoose
         
-        if userChoose[0] in ['all','ALL','All']:
+        if debug or userChoose[0] in ['all','ALL','All']:
             userChoose = [str(i) for i in range(len(classInfo))]
         logging.debug("userChoose = "+str(userChoose))
         for i,myclass in enumerate(classInfo):
@@ -146,21 +148,21 @@ class autoElearning():
                             for goToClass in goToClasses:
                                 logging.debug("goToClass:"+str(goToClass['name']))
                                 logging.debug("goToClass="+json.dumps(goToClass,indent=2))
-                                if goToClass['type'] == 'scorm': ##上課
+                                if goToClass['type'] == '教材': ##上課
                                     doSomething = True
                                     logging.info(u'\t進入子課程:{} ({}/{}) ...'.format(goToClass['name'],now+1,len(classBranchInfo)))
                                     self.learner(driver,goToClass,learnTrueTime,learnRatio)
-                                elif goToClass['type'] == 'exam' and autoExam: ##考試
+                                elif goToClass['type'] == '考試' and autoExam: ##考試
                                     doSomething = True
                                     logging.info(u'\t考試:{} ({}/{})...'.format(goToClass['name'],now+1,len(classBranchInfo)))
                                     noSample = True
                                     noAnsLimit = 10
-                                    answerList = self.getHaveAnswer(qs,driver,goToClass['url'])
+                                    answerList = self.getHaveAnswer(qs,driver,goToClass['onclick'])
                                     beforeLen = -1
                                     while noSample:
-                                        url = elearning_domain + '/WcmsModules/OnLineClass/'+goToClass['url']
+                                        url = elearning_domain + '/WcmsModules/OnLineClass/'+goToClass['onclick']
                                         driver.get(url)
-                                        driver.find_element_by_id("startBtn").click()
+                                        driver.find_element(By.ID, "startBtn").click()
                                         try:
                                             driver.switch_to_alert().accept()
                                         except:
@@ -176,7 +178,7 @@ class autoElearning():
                                         if '100' in score or allHavaAns:
                                             noSample = False
                                         if noSample:
-                                            answerList = self.getHaveAnswer(qs,driver,goToClass['url'])
+                                            answerList = self.getHaveAnswer(qs,driver,goToClass['onclick'])
                                 elif goToClass['type'] == 'questionnaire' and autoExam:##問卷
                                     doSomething = True
                                     logging.info(u'\t填寫問卷中 ...')
@@ -197,103 +199,83 @@ class autoElearning():
         logging.info(u"完成所有指定課程! Enter 結束!")
         input("")
     
-    def getClassInfo(self,html):
+    def getClassInfo(self, html):
         tree = etree.HTML(html)
-        table = tree.xpath('//*[@id="tabContent"]/div/div[2]/section/div/div/div[3]/div[1]/ul/li')[0]
-        myclasses = table.xpath('//fieldset/table[@class="table"]/tbody')[0][1:]
+        table = tree.xpath('//div[@class="DashBoard"]')[0]
+        myclasses = table.xpath('//ul/li/div[@class="timeline-body"]')
         classInfo = []
         
         for myclass in myclasses:
-            name = myclass.xpath('td/a')[0].text
-            href = myclass.xpath('td/a')[0].get('href')
+            name = myclass.xpath('h2[@class="timeline-content"]/a')[0].text.strip()
+            href = myclass.xpath('h2[@class="timeline-content"]/a')[0].get('href')
             try:
                 score = int(myclass.xpath('td/div/span/table/tbody/tr[3]/td[2]/text()')[0].split('目前平均成績:')[-1].split(')')[0])
             except:
                 score = 0
-            coursePK = href[href.find('coursePK='):]
-            coursePK = coursePK[:coursePK.find('&')]
-            classPK = href[href.find('classPK='):]
-            classPK = classPK[:classPK.find('&')]
-            ispass = 'green.gif' in myclass.xpath('td/img')[1].get('src')
+            coursePK = href.split('CoursePK/')[-1].split('/')[0]
+            classPK = href.split('ClassPK/')[-1].split('/')[0]
+            ispass = False #'green.gif' in myclass.xpath('td/img')[1].get('src')
             classInfo.append({'name':name,
                               'coursePK':coursePK,
                               'classPK':classPK,
                               'ispass':ispass,
-                              'score':score})
+                              'score':score,
+                              'href': href})
         return classInfo
     
     
     def getClassBranchInfo(self,driver,myclass):
-        coursePK = myclass['coursePK'].replace('coursePK','CoursePK')
-        classPK = myclass['classPK'].replace('classPK','ClassPK')
-        classUrl = elearning_domain + '/WcmsModules/OnLineClass/TopMain.aspx?{}&{}&Mode=S'.format(coursePK,classPK)
+        classUrl = elearning_domain + '/RWD/#/TMS/OnlineClass/ClassPK/' + myclass['classPK']
         driver.get(classUrl)
-        try:
-            WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.ID, "iframeTips")))
-            driver.switch_to_frame("iframeTips")
-            driver.find_element_by_id("btnCancelDialog").click()
-            driver.switch_to.default_content()
-        except:
-            pass
-        driver.switch_to.frame(driver.find_element_by_id("iframe1"))
+        WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.ID, "collapse")))
         html = driver.page_source
         
         tree = etree.HTML(html)
         forceClass = False
-        classes = tree.xpath('//div[@id="ResourceList1_StudentArea"]/table/tbody')[0][1:]
+        classes = tree.xpath('//div[@id="StudentArea"]/div[@class="row"]/div/section[contains(@class, "panel-featured-primary")]/div/div')
         ClassBranchInfo = []
-        for myclass in classes[-1::-1]:
-            type = myclass.xpath('td/div')[0].get('class')
-            name = myclass.xpath('td/a')[0].text
-            onclick = myclass.xpath('td/a')[0].get('onclick')
-            finished = myclass.xpath('td/table/tbody/tr/td[2]/text()')[0].strip()
-            infoBox = tree.xpath('//div[@id="ClassEndCondition1_divShow"]/text()')[0].strip()
-            infoBox = infoBox.split('分鐘')
-            needMin = int(infoBox[0].replace('閱讀完所有教材，且總時數達',''))
-            nowMin = int(infoBox[1].replace('以上,目前進度為',''))
-            if '100' == finished.split('%')[0].replace('完成度 : ',''):
-                finished = True
-            elif '完成度' not in finished and '未完成' not in finished and '完成' in finished and type != 'scorm':
-                finished = True
-            elif '100.00' in finished:
-                finished = True
-            else:
-                finished = False
-            url = ''
+        # '教材：閱讀總時數至少達30分鐘,目前進度為64分鐘。'
+        mian_info = tree.xpath('//div[@id="StudentArea"]/div[@class="row"][1]/div[1]/section/div[2]/div/div[2]/div[1]/div/ul/li[2]/text()')[0] 
+        # 目前分鐘
+        main_progress_min = int(re.sub('\D', "", mian_info.split('分鐘')[1])) # 60
+        # 總共需要分鐘
+        main_total_min = int(re.sub('\D', "", mian_info.split('分鐘')[0])) # 30
+        infoBox = None
+        for submyclass in classes:
+            ## <div class="widget-summary">
+            type = submyclass.xpath('a/div/div/span')[0].get('title') # 教材 | 考試
+            name = submyclass.xpath('div/div/span/a')[0].text.strip() # 課程名稱 
+            onclick = submyclass.xpath('div/div/span/a')[0].get('onclick') # 
+            
+            # if '100' == finished.split('%')[0].replace('完成度 : ',''):
+            #     finished = True
+            # elif '完成度' not in finished and '未完成' not in finished and '完成' in finished and type != '教材':
+            #     finished = True
+            # elif '100.00' in finished:
+            #     finished = True
+            # else:
+            #     finished = False
+            # 教材:  '完成度 : 0% | 閱讀時數 : --分鐘|教材測驗成績 : 0|'
+            infoBox = ''.join(submyclass.xpath('div/div/div[@class="info"]/text()')).strip() 
+            finished = False
             if onclick != '': 
-                if type == 'scorm':
-                    onclick1 = onclick.replace("GoToClassRoom('","").replace("')","")
-                    onclick1 = onclick1.split(',')
-                    url = onclick1[0].replace("'","")
-                    cacheKey = onclick1[1].replace("'","")
-                    classID = onclick1[2].replace("'","")
-                    rid = onclick1[3].replace("'","")
-                    catch = url.replace(elearning_domain,'')
-                    catch = 'Class_' + catch.split('/')[0]
-                    # /WcmsModules/OnLineClass/OpenScormReader.aspx?classID=B202003050001&RID=rc-2cfb49f3-e827-4d1d-a8e3-74a83a96473a&cacheKey=Class_c82ae038-a396-41d8-9fd2-e754b4a4fb74&readerURL=http%3A//elearning.hncb.com.tw%3A82/69a25b72-0777-4d0d-aee9-2d651db5989b/rcdata/privatecourse/rc-2cfb49f3-e827-4d1d-a8e3-74a83a96473a/%24startup
-                    url = elearning_domain + '/WcmsModules/OnLineClass/OpenScormReader.aspx?classID={classID}&RID={rid}&cacheKey={cacheKey}&readerURL={url}'.format(
-                        classID = classID,
-                        rid = rid,
-                        cacheKey = cacheKey,
-                        url = url)
-                elif type == 'exam':
-                    url = onclick[onclick.find('ExamModule'):]
-                    url = url[:url.find("'")]
-                    if len(url) > 0:
-                        forceClass = nowMin<needMin
-                        if forceClass:
-                            logging.info(u'\t分鐘數不足 (已讀 {} 分鐘 , 需要 {} 分鐘) ,且已有考試,強制啟用閱讀'.format(nowMin,needMin))
-                elif type == 'questionnaire':
-                    url = onclick[onclick.find('SCROMWrapper'):]
-                    url = url[:url.find("'")]
+                if type == '教材':
+                    finished = main_progress_min > main_total_min
+                if type == '考試':
+                    finished = '100' == re.sub('\D', "", infoBox.split('|')[0]).strip()
+                    forceClass = False
+                    # if forceClass:
+                    #     logging.info(u'\t分鐘數不足 (已讀 {} 分鐘 , 需要 {} 分鐘) ,且已有考試,強制啟用閱讀'.format(main_progress_min,main_total_min))
+                if type == '問卷':
+                    finished = infoBox != '未完成'
             ClassBranchInfo.append({'type':type,
                                     'name':name,
-                                    'url':url,
                                     'onclick':onclick,
                                     'force':forceClass,
                                     'finished':finished,
-                                    'nowMin':nowMin,
-                                    'needMin':needMin})
+                                    'main_progress_min':main_progress_min,
+                                    'main_total_min':main_total_min,
+                                    'onclick': onclick})
         return ClassBranchInfo
     
     def getNeedTolClass(self,classBranchInfo):
@@ -301,8 +283,8 @@ class autoElearning():
         skipList = []
         lastClass = []
         beenForce = False
-        for myclass in classBranchInfo[-1::-1]:
-            if myclass['url'] != '':
+        for myclass in classBranchInfo:
+            if myclass['onclick'] != '':
                 if myclass['force'] and myclass['type'] == 'scorm':
                     beenForce = True
                     lastClass.append(myclass)
@@ -318,57 +300,51 @@ class autoElearning():
     def learner(self,driver,classBranch,TrueLearn=False,learnRatio=1.5):
         FlashPlayer = False
         
-        logging.debug("into:"+classBranch['url'])
+        logging.debug("into:"+classBranch['onclick'])
         driver.get_log('browser')
         loaded = False
         while not loaded:
             try:
-                driver.get(classBranch['url'])
-                logging.debug("wait by contentframe ...")
+                driver.execute_script(classBranch['onclick'])
+                if driver.find_element(By.ID, 'divOrcaAlert').is_displayed():
+                    driver.execute_script('setOrcaConfirmResult(true);')
+                WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.ID, "iframeCDS")))
+                driver.switch_to.frame(driver.find_element(By.ID, "iframeCDS"))
                 WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.ID, "contentframe")))
+                driver.switch_to.frame(driver.find_element(By.ID, "contentframe"))
                 loaded = True
-            except:
+            except Exception as e:
                 logging.debug("page is error? try again...")
-        logging.debug("wait by contentframe ...")
-        WebDriverWait(driver,30).until(EC.visibility_of_element_located((By.ID, "menuframe")))
-        learnAll = classBranch['nowMin'] < classBranch['needMin']
+        learnAll = classBranch['main_progress_min'] < classBranch['main_total_min']
         if learnAll:
             script = ''.join(open('command.txt').readlines())
         else:
             script = ''.join(open('command-com.txt').readlines())
-        sleep(3)
-        logging.debug("switch_to_frame menuframe...")
-        driver.switch_to_frame(driver.find_element_by_id("menuframe"))
-        WebDriverWait(driver,30).until(EC.visibility_of_element_located((By.XPATH, '//ul[@class="k-group k-treeview-lines"]')))
+        # logging.debug("switch_to_frame menuframe...")
+        # driver.switch_to_frame(driver.find_element(By.ID, "menuframe"))
+        # WebDriverWait(driver,30).until(EC.visibility_of_element_located((By.XPATH, '//ul[@class="k-group k-treeview-lines"]')))
         html = driver.page_source
         tree = etree.HTML(html)
-        classes = len(tree.xpath('//ul[@class="k-group k-treeview-lines"]')[0])
-        min = (classes*6) // 60
-        sec = (classes*6) - 60*min
-        if not TrueLearn:
-            logging.info(u"\t\t上課中...視訊量:{} 所需約:{} 分 {} 秒 ... ".format(classes,min,sec))
-        else:
-            logging.info(u"\t\t上課中...視訊量:{}".format(classes))
-        self.waitConsole(driver,'APIAdapter initialized')
+        
+        # classes = len(tree.xpath('//ul[@class="k-group k-treeview-lines"]')[0])
+        # min = (classes*6) // 60
+        # sec = (classes*6) - 60*min
+        # if not TrueLearn:
+        #     logging.info(u"\t\t上課中...視訊量:{} 所需約:{} 分 {} 秒 ... ".format(classes,min,sec))
+        # else:
+        #     logging.info(u"\t\t上課中...視訊量:{}".format(classes))
+        self.waitConsole(driver, 'APIAdapter initialized')
 #         driver.execute_script('$(window).unbind("blur focusout");')
         learningTime,learnMin,learnSec,TotalSec = self.getLearnTime(driver,learnRatio)
         thisScript = script.format(min = str(learnMin).zfill(2),sec=str(learnSec).zfill(2),rnd=str(randint(0,99)).zfill(2)) if learnAll else script
         logging.debug('thisScript={}'.format(thisScript))
-        if TrueLearn:
-            logging.debug('sleep({})'.format(TotalSec))
-            autoElearning.driver = driver
-            autoElearning.detection = True
-            sleep(TotalSec)
-            autoElearning.detection = False
-            sleep(0.5)
-            
         logging.debug("exec script...:"+thisScript)
         driver.execute_script(thisScript)
         if learnAll:
-            es = driver.find_elements_by_xpath('//div/span[@class="k-in"]')
+            es = driver.find_elements(By.XPATH, '//div/span[@class="k-in"]')
         else:
-            es = driver.find_elements_by_xpath('//span[@class="k-in"]/img[@src="/images/not attempted.gif"]')
-            es += driver.find_elements_by_xpath('//span[@class="k-in"]/img[@src="/images/incomplete.gif"]')
+            es = driver.find_elements(By.XPATH, '//span[@class="k-in"]/img[@src="/images/not attempted.gif"]')
+            es += driver.find_elements(By.XPATH, '//span[@class="k-in"]/img[@src="/images/incomplete.gif"]')
         for e in es:
             driver.get_log('browser')
             e.click()
@@ -377,13 +353,6 @@ class autoElearning():
             learningTime,learnMin,learnSec,TotalSec = self.getLearnTime(driver,learnRatio)
             thisScript = script.format(min = str(learnMin).zfill(2),sec=str(learnSec).zfill(2),rnd=str(randint(0,99)).zfill(2)) if learnAll else script
             logging.debug('thisScript={}'.format(thisScript))
-            if TrueLearn:
-                logging.debug('sleep({})'.format(TotalSec))
-                autoElearning.driver = driver
-                autoElearning.detection = True
-                sleep(TotalSec)
-                autoElearning.detection = False
-                sleep(0.5)
             logging.debug("exec script...:"+thisScript)
             driver.get_log('browser')
             driver.execute_script(thisScript)
@@ -394,7 +363,7 @@ class autoElearning():
         logging.debug("switch_to.default_content ...")
         driver.switch_to.default_content()
         logging.debug("switch systemframe ...")
-        driver.switch_to_frame(driver.find_element_by_id("systemframe"))
+        driver.switch_to_frame(driver.find_element(By.ID, "systemframe"))
         logging.debug(u"click 儲存並離開 ...")
         driver.find_element_by_xpath("//*[@value='儲存並離開']").click()
         logging.debug(u"wait... 關閉 ...")
@@ -417,11 +386,13 @@ class autoElearning():
             
     def getLearnTime(self,driver,learnRatio):
         driver.get_log('browser')
-        learningTime = '00:00'
-        while learningTime == '00:00' or learningTime == None or '' == learningTime:
+        learningTime = '00:00:00'
+        while learningTime == '00:00:00' or learningTime == None or '' == learningTime:
             try:
-                driver.execute_script("""console.log("auto-learn:"+parent.window.$('#contentframe').contents().find('#myElement_controlbar_duration').text());""")
-                learningTime = self.waitConsole(driver, 'auto-learn:')
+                driver.execute_script("""parent.window.API.LMSGetValue('cmi.core.total_time')""")
+                learningTime = self.waitConsole(driver, 'total seconds :')
+                driver.get_log('browser')
+                learningTime = self.waitConsole(driver, 'total seconds :')
                 driver.get_log('browser')
                 if learningTime != None:
                     learningTime = learningTime.split('"')[1].replace('auto-learn:','')
@@ -442,13 +413,14 @@ class autoElearning():
         
     def getHaveAnswer(self,qs,driver,url,BigExam = False):
         logging.info(u"\t採樣中...")
-        examPK = url[url.find('ExamPK='):]
-        examPK = examPK[:examPK.find('&')]
+        examPK = re.sub('\D', "" ,url)
         answerList = []
         answerListFinal = []
         if not BigExam:
-            examListUrl = elearning_domain + "/WcmsModules/OnLineClass/ExamModule/QueryScore.aspx?" + examPK
+            examListUrl = elearning_domain + f"/RWD/#/Elearning/MyOnlineExam/ExamRecord/ExamPK/{examPK}/Src/"
             driver.get(examListUrl)
+            sleep(2)
+            WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.NAME, "ctl00")))
             text = driver.page_source
             answerUrlList = self.getAnsUrlList(text)
         else:
@@ -459,6 +431,9 @@ class autoElearning():
             
         for ansurl in answerUrlList:
             driver.get(ansurl)
+            sleep(2)
+            WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.ID, "divViewExamPaperBody")))
+            sleep(2)
             text = driver.page_source
             answerList = answerList + self.examParser(text,BigExam)
             for ans in answerList:
@@ -474,12 +449,12 @@ class autoElearning():
     def getAnsUrlList(self, html):
         anslist = []
         tree = etree.HTML(html)
-        table = tree.xpath('//table[@width="90%"]/tbody/tr')[2:]
-        for tr in table:
+        trs = tree.xpath('//table[contains(@class, "sticky-enabled")]/tbody/tr')
+        for tr in trs:
             td = tr.xpath('td')[-1]
-            lastUrl = etree.tostring(td).decode('utf-8').split('window.open(\'')[-1].split('\');" ')[0]
-            lastUrl = lastUrl.replace('&amp;', "&")
-            anslist.append(elearning_domain + '/WcmsModules/OnLineClass/ExamModule/' + lastUrl)
+            a = td.xpath('a')[0]
+            lastUrl = elearning_domain + '/RWD/#/Elearning/MyOnlineExam/ExamAnswerContent/ExamPaperPK/' + re.sub('\D', '', a.get('onclick'))
+            anslist.append(lastUrl)
         return anslist
     
     def getAnsUrlList_BigExam(self, html):
@@ -497,44 +472,55 @@ class autoElearning():
         mlist = []
         tree = etree.HTML(html)
         if not BigExam:
-            table = tree.xpath('//*[@id="form1"]/div/table[@width="100%"]/tbody/tr[2]/td/table[3]/tbody/tr/td')
-            
-            for box in table:
-                q = box.xpath('span[1]')[0].xpath('normalize-space()')
-                if u'是非題,共' in q or u'單選題,共' in q or u'複選題,共' in q:
+            tables = tree.xpath('//*[@id="divViewExamPaperBody"]/table')
+            h5s = tree.xpath('//*[@id="divViewExamPaperBody"]/h5')
+            qs = []
+            chains = []
+            for i, h5 in enumerate(h5s):
+                chains.append((
+                    h5,
+                    tables[i]
+                ))
+                
+            for target in chains:
+                h5 = target[0]
+                q_type = h5.xpath('text()')
+                q = h5.xpath('span')[0].xpath('text()')[3:]
+                box = target[1]
+                if u'是非題' in q_type or u'單選題' in q_type or u'複選題' in q_type:
                     continue
-                ansbox = box.xpath('table/tbody/tr')
+                ansbox_trs = box.xpath('tbody/tr')
                 ans = ""
-                if len(ansbox) <= 3:
+                if len(ansbox_trs) <= 3:
                     # 是非題
-                    for i in range(len(ansbox[1:])):
-                        if len(ansbox[1:][i].xpath('td[2]/img')) > 0:
+                    for i in range(len(ansbox_trs[1:])):
+                        if len(ansbox_trs[1:][i].xpath('td[2]/img')) > 0:
                             ans = "2"
                         else:
                             ans = "1"
-                    firstOptionText = self.cleanText(''.join(ansbox[1:][0].xpath('td[3]/text()')))
+                    firstOptionText = self.cleanText(''.join(ansbox_trs[1:][0].xpath('td[3]/text()')))
     #                 list.append(ans+"\t\t"+q)
                 else:
                     # 選擇題 or 複選題
-                    for i in range(len(ansbox[1:])):
-                        if len(ansbox[1:][i].xpath('td[2]/img')) > 0:
+                    for i, tr in enumerate(ansbox_trs):
+                        if len(tr.xpath('td[2]/i')) > 0:
                             if type(ans) is str:
                                 if ans == "": #沒有答案
                                     ans = str(i + 1)  # +','+ansbox[1:][i].xpath('td[3]')[0].xpath('normalize-space()')
-                                    firstOptionText = self.cleanText(''.join(ansbox[1:][0].xpath('td[3]/text()')).strip())
+                                    firstOptionText = self.cleanText(''.join(tr.xpath('td[3]/text()')).strip())
                                 else: # 已經有答案  代表複選題
                                     ans = [ans,str(i + 1)]
                             elif type(ans) is list: #複選題
                                 ans.append(str(i + 1))
     #             print firstOptionText.encode('big5','ignore')
-                mlist.append((ans, self.cleanText(q.strip()),firstOptionText))
+                mlist.append((ans, q, firstOptionText))
         else:
             table = tree.xpath('/html/body/table/tbody/tr[2]/td/table[@class="table" and @width="100%" and not(@cellpadding="3")]/tbody/tr')
             for box in table:
                 if len(box.xpath('td[@class="thead"]')) > 0:
                     continue
-                q = box.xpath('td[@class="tdrowbody"]/table[@class="tdrowbody"]/tbody/tr/td[@class="topicCaption"]')[0].xpath('normalize-space()')
-                q = ''.join(q.split('.')[1:]).split(u' (題目配分：')[0]
+                q_type = box.xpath('td[@class="tdrowbody"]/table[@class="tdrowbody"]/tbody/tr/td[@class="topicCaption"]')[0].xpath('normalize-space()')
+                q_type = ''.join(q_type.split('.')[1:]).split(u' (題目配分：')[0]
                 ansbox = box.xpath('td[@class="tdrowbody"]//tr[@bgcolor="#EEEEEE"]')
                 ansText = ""
                 if len(ansbox) <= 2:
@@ -553,7 +539,7 @@ class autoElearning():
                                     ansText = [ansText,''.join(ansbox[i].xpath('td[3]/text()'))]
                             elif type(ansText) is list: #複選題
                                 ans.append(''.join(ansbox[i].xpath('td[3]/text()')))
-                mlist.append((ansText, self.cleanText(q.strip())))
+                mlist.append((ansText, self.cleanText(q_type.strip())))
         return mlist
     
     
@@ -635,7 +621,7 @@ class autoElearning():
                     fullId = 'QuestionItemList_ctl{}_isAnswer_{}'.format(str(int(startNum)+i).zfill(2),int(a)-1)
                     driver.find_element_by_xpath("//input[@id='{}']".format(fullId)).click()
 #                     driver.find_element_by_xpath("//input[@id='{}' and @type='radio']".format(fullId)).click()
-#                     el = driver.find_element_by_id('QuestionItemList_ctl{}_isAnswer_{}'.format(str(int(startNum)+i).zfill(2),int(a)-1))
+#                     el = driver.find_element(By.ID, 'QuestionItemList_ctl{}_isAnswer_{}'.format(str(int(startNum)+i).zfill(2),int(a)-1))
 #                     action = webdriver.common.action_chains.ActionChains(driver)
 #                     action.move_to_element_with_offset(el,6,6)
 #                     action.click()
@@ -644,13 +630,13 @@ class autoElearning():
             driver.maximize_window()
         except:
             logging.debug('fail to max ,skip:'+traceback.format_exc())
-        driver.find_element_by_name("saveBtn").click()
+        driver.find_element(By.NAME, "saveBtn").click()
         if hide :
             try:
                 driver.set_window_position(-10000,0)
             except:
                 logging.debug('fail to hide , skip:'+traceback.format_exc())
-#         saveBtn = driver.find_element_by_name("saveBtn")
+#         saveBtn = driver.find_element(By.NAME, "saveBtn")
 #         action = webdriver.common.action_chains.ActionChains(driver)
 #         action.move_to_element_with_offset(saveBtn,6,6)
 #         action.click()
@@ -676,13 +662,13 @@ class autoElearning():
         except:
             pass
         logging.info(u'\t繳卷成功!')
-        score = driver.find_element_by_xpath('//span[@id="Score"]').text.split('分')[0]
+        score = driver.find_element(By.XPATH, '//span[@id="Score"]').text.split('分')[0]
         logging.info(u'\t分數:{}'.format(score))
         
         return allHavaAns,score
     
     def questionnaire(self,driver,qs,myclass):
-        PK = myclass['url'][myclass['url'].find('PK='):]
+        PK = myclass['onclick'][myclass['onclick'].find('PK='):]
         PK = PK[:PK.find('&')]
         PK = PK.replace('PK=','')
         self.goToHome(driver)
@@ -713,7 +699,7 @@ class autoElearning():
     
     
     
-    def logging(self,driver,ac,pw,hide = True):
+    def loggin(self,driver,ac,pw,hide = True):
         qs = requests.Session()
         qs.verify = False
         while True:
@@ -722,16 +708,19 @@ class autoElearning():
                 logging.info(u'登入中...')
                 driver.get(elearning_domain + '/WcmsModules/Portal/FullFrameLogin/index.aspx')
                 sleep(0.5)
-                driver.find_elements_by_id("UserID")[0].send_keys(ac)
-                driver.find_elements_by_id("Password")[0].send_keys(pw)
+                driver
+                driver.find_elements(By.ID, "UserID")[0].send_keys(ac)
+                driver.find_elements(By.ID, "Password")[0].send_keys(pw)
                     
-                if hide :driver.set_window_position(-10000,0)
-                driver.find_elements_by_id("btnSignIn")[0].click()
+                if hide :
+                    driver.set_window_position(-10000,0)
+                driver.find_elements(By.ID, "btnSignIn")[0].click()
                 for cookie in driver.get_cookies():
                     qs.cookies.set(cookie['name'], cookie['value'])
-                driver.switch_to_frame(driver.find_element_by_name("bottomframe"))
-                driver.switch_to_frame(driver.find_element_by_name("display"))
-
+                logo = driver.find_element(By.CLASS_NAME, 'logo-container')
+                if logo == None:
+                    raise Exception('登入失敗!')
+                WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.CLASS_NAME, "DashBoard")))
                 logging.info(u"登入成功!")
                 break
             except Exception as e:
@@ -751,8 +740,8 @@ class autoElearning():
     
     def goToHome(self,driver):
         driver.get(elearning_domain + '/Index.aspx')
-        driver.switch_to_frame(driver.find_element_by_name("bottomframe"))
-        driver.switch_to_frame(driver.find_element_by_name("display"))
+        driver.switch_to_frame(driver.find_element(By.NAME, "bottomframe"))
+        driver.switch_to_frame(driver.find_element(By.NAME, "display"))
         return driver
     
     def get_captcha(self,driver, element, path):
@@ -817,14 +806,14 @@ class detection_event(Thread):
         while True:
             if autoElearning.detection:
                 driver = autoElearning.driver
-                logging = autoElearning.logging
+                logging = autoElearning.loggin
                 try:
                     driver.switch_to.default_content()
                     btn = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, '//input[@onclick="fnTimeIsUpCheck()"]')))
                     if btn.is_displayed():
                         logging.info(u'\t點擊繼續閱讀...')
                         btn.click()
-                    driver.switch_to_frame(driver.find_element_by_id("menuframe"))
+                    driver.switch_to_frame(driver.find_element(By.ID, "menuframe"))
                 except Exception as e:
                     logging.error(e)
                 sleep(0.1)

@@ -1,3 +1,0 @@
-[0914/170024.359:ERROR:process_reader_win.cc(123)] NtOpenThread: {拒絕存取} 程序已請求存取一物件，但未被授與存取權。  (0xc0000022)
-[0914/170024.368:ERROR:exception_snapshot_win.cc(87)] thread ID 7876 not found in process
-[0914/170024.368:WARNING:crash_report_exception_handler.cc(62)] ProcessSnapshotWin::Initialize failed
