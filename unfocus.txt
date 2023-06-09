@@ -1,0 +1,1 @@
+$(window).unbind("blur focusout");

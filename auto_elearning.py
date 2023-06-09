@@ -100,7 +100,7 @@ class autoElearning():
                     pass
                 examHtml = driver.page_source
                 lastLen = len(answerList)
-                answerList,ansList,noSample,startNum = self.getAns(qs,examHtml,answerList,BigExam)
+                answerList,ansList,noSample,startNum = self.getAns(driver, qs,examHtml,answerList,BigExam)
                 #強制等待
                 sleep(2)
                 driver.implicitly_wait(10)
@@ -159,17 +159,18 @@ class autoElearning():
                                     noAnsLimit = 10
                                     answerList = self.getHaveAnswer(qs,driver,goToClass['onclick'])
                                     beforeLen = -1
+                                    
                                     while noSample:
-                                        url = elearning_domain + '/WcmsModules/OnLineClass/'+goToClass['onclick']
-                                        driver.get(url)
-                                        driver.find_element(By.ID, "startBtn").click()
-                                        try:
-                                            driver.switch_to_alert().accept()
-                                        except:
-                                            pass
+                                        classUrl = elearning_domain + '/RWD/#/TMS/OnlineClass/ClassPK/' + myclass['classPK']
+                                        driver.get(classUrl)
+                                        WebDriverWait(driver,10).until(EC.visibility_of_element_located((By.ID, "collapse")))
+                                        driver.execute_script(goToClass['onclick'])
+                                        WebDriverWait(driver,10).until(EC.visibility_of_element_located((By.ID, "divOnlineTest")))
+                                        driver.find_element(By.XPATH, '//*[@id="divOnlineTest"]//button[1]').click()
+                                        WebDriverWait(driver,10).until(EC.visibility_of_element_located((By.ID, "divQuestions")))
                                         examHtml = driver.page_source
                                         lastLen = len(answerList)
-                                        answerList,ansList,noSample,startNum = self.getAns(qs,examHtml,answerList)
+                                        answerList,ansList,noSample,startNum = self.getAns(driver, qs,examHtml,answerList)
                                         #強制等待
                                         sleep(2)
                                         driver.implicitly_wait(10)
@@ -431,9 +432,7 @@ class autoElearning():
             
         for ansurl in answerUrlList:
             driver.get(ansurl)
-            sleep(2)
             WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.ID, "divViewExamPaperBody")))
-            sleep(2)
             text = driver.page_source
             answerList = answerList + self.examParser(text,BigExam)
             for ans in answerList:
@@ -485,7 +484,7 @@ class autoElearning():
             for target in chains:
                 h5 = target[0]
                 q_type = h5.xpath('text()')
-                q = h5.xpath('span')[0].xpath('text()')[3:]
+                q = h5.xpath('span[1]/text()')[0][3:]
                 box = target[1]
                 if u'是非題' in q_type or u'單選題' in q_type or u'複選題' in q_type:
                     continue
@@ -543,24 +542,24 @@ class autoElearning():
         return mlist
     
     
-    def getAns(self,qs,examHtml,answerList,BigExam=False):
+    def getAns(self,driver, qs,examHtml,answerList,BigExam=False):
         tree = etree.HTML(examHtml)
-        table = tree.xpath('//div[@id="OptContentDIV"]/table/tbody/tr/td/div')
+        table = tree.xpath('//*[@id="divQuestions"]/div[@class="examBlock"]')
         no = 0
         ansList = []
         noSample = False
-        
+        driver.execute_script('$(window).unbind("blur focusout");')
         if not BigExam:
             for i,examqution in enumerate(table):
                 no += 1
-                examqutionText = (''.join(examqution.xpath('text()')).strip()).split('分)')[-1].strip()
-                examFirstOptionText = ''.join(examqution.xpath('div/table/tbody/tr[1]/td/label/text()')).strip()
-                id = re.sub('.*(\d+).*',r'\1',examqution.xpath('span')[0].get('id')[0:-2]).zfill(2)
-                if i == 0:
-                    startNum = id
+                examqutionText = (''.join(examqution.xpath('//div[1]/span/text()')).strip())[3:]
+                # examFirstOptionText = ''.join(examqution.xpath('div/table/tbody/tr[1]/td/label/text()')).strip()
+                # id = re.sub('.*(\d+).*',r'\1',examqution.xpath('span')[0].get('id')[0:-2]).zfill(2)
+                # if i == 0:
+                #     startNum = id
                 find = False
                 for ans, q, firstOptionText in answerList:
-                    if self.cleanText(examqutionText) in q and firstOptionText in self.cleanText(examFirstOptionText):
+                    if self.cleanText(examqutionText) in q:
                         ansList.append(ans)
     #                     print examFirstOptionText.encode('big5','ignore')
     #                     print firstOptionText.encode('big5','ignore')
